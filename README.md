@@ -4,17 +4,13 @@ Pipeline for processing and assembling metagenomic WGS ONT data
 ## Construction outline:
 
 ### 1. Preprocessing
-- Deepbinner OR filtlong
-- Also consider fastp & advantages of >1 QC check
-- PlasFlow to ID plasmid reads
+- filtlong/fastp
+- PlasFlow to ID plasmid reads (?)
 
 ### 2. Assembly
 - Flye, Raven, miniasm (run all three)
-- Obtain consensus with TryCycler
+- Cluster and obtain consensus with Trycycler
 - No subsetting: don't have enough coverage for low-abundance species
-
-#### 2b. Removing redundant genomes with dereplicator
-I don't expect this to be that useful
 
 ### 3. Polishing (avoiding reliance on Illumina reads)
 Important choice: which/how many of these to use, and how many times to run them.
