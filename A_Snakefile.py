@@ -72,7 +72,7 @@ rule raven:
 	output:
 		"{TEMP_RUN_DIR}/{sample}.raven.{RUN_DATE}/assembly.fasta"
 	shell:
-		"raven -t {NUM_THREADS_PIPELINE} > output}"
+		"raven -t {NUM_THREADS_PIPELINE} {input} > {output}"
 
 rule miniasm:
 	input:
@@ -80,16 +80,16 @@ rule miniasm:
 	output:
 		"{TEMP_RUN_DIR}/{sample}.miniasm.{RUN_DATE}/assembly.fasta"
 	shell:
-		"overlaps=$(mktemp)\".paf\""
-		"unpolished_assembly=$(mktemp)\".gfa\""
+		"overlaps=$(mktemp)\".paf\"\n"
+		"unpolished_assembly=$(mktemp)\".gfa\"\n"
 		
-		"minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} {input} {input} \ "
-		"> \"$overlaps\"
+		"minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} {input} {input} "
+		"> \"$overlaps\"\n"
 		
-		"miniasm -f {input} \"$overlaps\" > \"$unpolished_assembly\""
+		"miniasm -f {input} \"$overlaps\" > \"$unpolished_assembly\"\n"
 		
-		"minipolish --threads {NUM_THREADS_PIPELINE} {input} \"$unpolished_assembly\" \ "
-		"> {output}"
+		"minipolish --threads {NUM_THREADS_PIPELINE} {input} \"$unpolished_assembly\" "
+		"> {output}\n"
 		
 		"rm -f \"$overlaps\" \"$unpolished_assembly\""
 
@@ -103,18 +103,15 @@ rule canu:
 		"--correctedErrorRate 0.06 genomeSize=3.87m -nanopore -fast -corrected {input} \ "
 		" > {output}"
 
-rule trycycler:
+#May need to unzip read file for this part
+rule try_cluster:
 	input:
 		expand("{TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/assembly.fasta", assemb=assemblers)
 	output:
-		"."
-
-rule polish:
-
-rule taxo:
-
-rule prokka:
-
-rule quality_assess:
+		expand("{TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/cluster/contigs.phylip")
+	shell:
+		"trycycler cluster --assemblies {TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/assembly.fasta "
+		"--reads {TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz "
+		"--out-dir {TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/cluster --threads {NUM_THREADS_PIPELINE}"
 		
 	
