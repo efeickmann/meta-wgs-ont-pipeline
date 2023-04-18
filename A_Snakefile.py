@@ -1,3 +1,7 @@
+#First of two Snakefiles for metagenomic assembly pipeline
+#Runs up through Trycycler clustering, at which point human intervention is needed
+#Use FigTree to visualize clusters
+
 #Remember to activate snake env
 
 import os, glob, sys
@@ -26,17 +30,19 @@ barcode = list(samples_df['barcode'])
 
 assemblers = ["flye", "raven", "miniasm", "canu"]
 
-#Hardware parameters
+#Hardware parameters — could be replaced by CL args
 NUM_THREADS_PIPELINE=12
 
 #Software parameters
 MIN_NANO_LEN=1000
-MAX_NANO_HOMOP=20
-TRYCYCLER_SUBSAMP_NUM=12
+#Below are unused
+#MAX_NANO_HOMOP=20
+#TRYCYCLER_SUBSAMP_NUM=12
 
 rule all:
 	input:
-		expand("{TEMP_RUN_DIR}/{sample}.{RUN_DATE}/post/cluster", sample = samples)
+		expand("{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.clusters/contigs.phylip", 
+		sample=samples)
 		
 #Combine all fastqs from a given barcode into one file
 rule concatenate:
@@ -61,16 +67,19 @@ rule flye:
 	input:
 		filt_fq = lambda wc: "{TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
-		"{TEMP_RUN_DIR}/{sample}.flye.{RUN_DATE}/assembly.fasta"
+		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/flye_assembly.fasta"
 	shell:
-		"flye --nano-hq {input.filt_fq} -o {TEMP_RUN_DIR}/{sample}.flye.{RUN_DATE} \ "
-		"--threads {NUM_THREADS_PIPELINE} --meta --debug --read-error 0.03"
+		"flye --nano-hq {input.filt_fq} -o {TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies "
+		"--threads {NUM_THREADS_PIPELINE} --meta --debug --read-error 0.03\n"
+		
+		"mv {TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/assembly.fasta "
+		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/flye_assembly.fasta"
 	
 rule raven:
 	input:
 		lambda wc: "{TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
-		"{TEMP_RUN_DIR}/{sample}.raven.{RUN_DATE}/assembly.fasta"
+		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/raven_assembly.fasta"
 	shell:
 		"raven -t {NUM_THREADS_PIPELINE} {input} > {output}"
 
@@ -78,7 +87,7 @@ rule miniasm:
 	input:
 		lambda wc: "{TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
-		"{TEMP_RUN_DIR}/{sample}.miniasm.{RUN_DATE}/assembly.fasta"
+		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/mini_assembly.fasta"
 	shell:
 		"overlaps=$(mktemp)\".paf\"\n"
 		"unpolished_assembly=$(mktemp)\".gfa\"\n"
@@ -91,27 +100,27 @@ rule miniasm:
 		"minipolish --threads {NUM_THREADS_PIPELINE} {input} \"$unpolished_assembly\" "
 		"> {output}\n"
 		
-		"rm -f \"$overlaps\" \"$unpolished_assembly\""
+		"rm -f \"$overlaps\" \"$unpolished_assembly\"\n"
 
-rule canu:
+rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
 	input:
 		lambda wc: "{TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
-		"{TEMP_RUN_DIR}/{sample}.canu.{RUN_DATE}/assembly.fasta"
+		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/canu_assembly.fasta"
 	shell:
-		"canu -d {TEMP_RUN_DIR}/{sample}.canu.{RUN_DATE}/ -p {sample}.canu.{RUN_DATE} \ "
+		"canu -d {TEMP_RUN_DIR}/{sample}.{RUN_DATE}/ -p {sample}.canu.{RUN_DATE} \ "
 		"--correctedErrorRate 0.06 genomeSize=3.87m -nanopore -fast -corrected {input} \ "
 		" > {output}"
-
+		
 #May need to unzip read file for this part
 rule try_cluster:
 	input:
-		expand("{TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/assembly.fasta", assemb=assemblers)
+		lambda wc: "{TEMP_RUN_DIR}/{wc.sample}.{RUN_DATE}.assemblies"
 	output:
-		expand("{TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/cluster/contigs.phylip")
+		"{TEMP_RUN_DIR}/{wc.sample}.{RUN_DATE}.clusters/contigs.phylip"
 	shell:
-		"trycycler cluster --assemblies {TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/assembly.fasta "
+		"trycycler cluster --assemblies {TEMP_RUN_DIR}/{wc.sample}.{RUN_DATE}.assemblies/*.fasta "
 		"--reads {TEMP_RUN_DIR}/{wc.sample}.{wc.barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz "
-		"--out-dir {TEMP_RUN_DIR}/{sample}.{assemb}.{RUN_DATE}/cluster --threads {NUM_THREADS_PIPELINE}"
+		"--out-dir {TEMP_RUN_DIR}/{wc.sample}.{RUN_DATE}.clusters --threads {NUM_THREADS_PIPELINE}"
 		
 	
