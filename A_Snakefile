@@ -77,7 +77,7 @@ rule qc:
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	shell:
-		f"filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {input} | gzip > {{output}}"
+		f"filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {ARCHIVE_DIR}/{{wildcards.sample}}.fastq.gz | gzip > {{output}}"
 
 #Multiple assemblies so Trycycler has something to work with	
 rule flye:
