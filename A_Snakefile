@@ -73,7 +73,8 @@ rule qc:
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	shell:
-		f"filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {input} | gzip > {{output}}"
+		f"""filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {ARCHIVE_DIR}/\
+		{{wildcards.sample}}.fastq.gz | gzip > {{output}}"""
 
 #Multiple assemblies so Trycycler has something to work with	
 rule flye:
@@ -82,7 +83,8 @@ rule flye:
 	output:
 		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/flye_assembly.fasta"
 	shell:
-		f"""flye --nano-hq {input} -o {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies \
+		f"""flye --nano-hq {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+		-o {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies \
 		--threads {NUM_THREADS_PIPELINE} --meta --debug --read-error 0.03
 		mv {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/assembly.fasta \
 		{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta"""
@@ -93,7 +95,8 @@ rule raven:
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta"
 	shell:
-		f"raven -t {NUM_THREADS_PIPELINE} {input} > {{output}}"
+		f"""raven -t {NUM_THREADS_PIPELINE} {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
+		 > {{output}}"""
 
 rule miniasm:
 	input:
@@ -104,11 +107,15 @@ rule miniasm:
 		"overlaps=$(mktemp)\".paf\"\n"
 		"unpolished_assembly=$(mktemp)\".gfa\"\n"
 		
-		f"""minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} {input} {input} \
+		f"""minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} \
+		{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+		{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 		> $overlaps
-		miniasm -f {input} $overlaps > $unpolished_assembly
-		minipolish --threads {NUM_THREADS_PIPELINE} {input} $unpolished_assembly \
-		> {{output}}
+		miniasm -f {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
+		 $overlaps > $unpolished_assembly
+		minipolish --threads {NUM_THREADS_PIPELINE} \
+		{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
+		 $unpolished_assembly > {{output}}
 		rm -f $overlaps $unpolished_assembly"""
 
 rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
@@ -119,7 +126,8 @@ rule canu: #might need to do some trimming of contig overlaps — script in Tryc
 	shell:
 		f"""canu -d {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/ -p canu.{{sample}} \
 		--correctedErrorRate 0.06 genomeSize=3.87m -nanopore -fast -corrected \
-		--stopOnLowCoverage=1 {input} > {{output}}"""
+		--stopOnLowCoverage=1 {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
+		 > {{output}}"""
 		
 #May need to unzip read file for this part
 rule try_cluster:
