@@ -16,7 +16,7 @@ import pandas as pd
 
 #Constants
 RUN_DATE="20230413"
-FLOW_CELL="FAR73398"
+FLOW_CELL="FAW74294"
 DSBIT_USER="efe2108"
 ONT_MODEL=""
 MIN_NANO_LEN=1000
@@ -51,10 +51,9 @@ rule all:
 	
 rule try_reconcile:
 	input:
-		dir=expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}", 
-		clus=clusters, sample=samples),
+		dir=f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}", 
 		reads=expand(f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz",
-		sample=samples, barcode=barcodes)
+		barcode=barcodes, sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/2_all_seqs.fasta"
 	shell:
@@ -69,8 +68,7 @@ rule try_reconcile:
 		
 rule try_msa:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/2_all_seqs.fasta",
-		clus=clusters, sample=samples)
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/2_all_seqs.fasta"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/3_msa.fasta"
 	shell:
@@ -79,10 +77,9 @@ rule try_msa:
 		
 rule try_partition:
 	input:
-		seqs=expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/2_all_seqs.fasta", 
-		clus=clusters, sample=samples),
+		seqs=f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/2_all_seqs.fasta",
 		reads=expand(f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz",
-		sample=samples, barcode=barcodes)
+		barcode=barcodes, sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/4_reads.fastq"
 	shell:
@@ -92,10 +89,8 @@ rule try_partition:
 		
 rule try_consensus:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/3_msa.fasta",
-		clus=clusters, sample=samples),
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/4_reads.fastq",
-		clus=clusters, sample=samples)
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/3_msa.fasta",
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/4_reads.fastq"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/7_final_consensus.fasta"
 	shell:
@@ -110,8 +105,7 @@ rule try_consensus:
 		
 rule medaka:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/8_racon.fasta",
-		clus=clusters, sample=samples)
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/8_racon.fasta"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/9_medaka.fasta"
 	shell:
@@ -122,10 +116,8 @@ rule medaka:
 		
 rule racon:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/7_final_consensus.fasta",
-		clus=clusters, sample=samples),
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/overlap.sam",
-		clus=clusters, sample=samples),
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/7_final_consensus.fasta",
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/overlap.sam"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/8_racon.fasta"
 	shell:
@@ -136,8 +128,7 @@ rule racon:
 		
 rule read_contig_overlap:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/7_final_consensus.fasta",
-		clus=clusters, sample=samples)
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/7_final_consensus.fasta"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/cluster_{{clus}}/overlap.sam"
 	shell:
