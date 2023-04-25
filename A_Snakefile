@@ -46,6 +46,17 @@ MIN_NANO_LEN=1000
 #MAX_NANO_HOMOP=20
 #TRYCYCLER_SUBSAMP_NUM=12
 
+#format should be a string of the form: "abc.sample.xyz.barcode"
+#sample is a list of samples
+#barcode is a list of barcodes corresponding to the samples
+def get_files(format, sample, barcode):
+	out_list = []
+	for i in len(sample):
+		str = format.replace("sample", sample[i])
+		str = str.replace("barcode", barcode[i])
+		out_list.append(str)
+	return out_list
+
 rule all:
 	input:
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/contigs.phylip", sample=samples)
@@ -64,14 +75,14 @@ rule qc:
 	input:
 		expand(f"{ARCHIVE_DIR}/{{sample}}.fastq.gz", sample=samples)
 	output:
-		f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	shell:
 		f"filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {input} | gzip > {{output}}"
 
 #Multiple assemblies so Trycycler has something to work with	
 rule flye:
 	input:
-		f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		"{TEMP_RUN_DIR}/{sample}.{RUN_DATE}.assemblies/flye_assembly.fasta"
 	shell:
@@ -82,7 +93,7 @@ rule flye:
 	
 rule raven:
 	input:
-		f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta"
 	shell:
@@ -90,7 +101,7 @@ rule raven:
 
 rule miniasm:
 	input:
-		f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta"
 	shell:
@@ -106,7 +117,7 @@ rule miniasm:
 
 rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
 	input:
-		f"{TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta"
 	shell:
@@ -129,7 +140,7 @@ rule try_cluster:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/contigs.phylip"
 	shell:
 		f"""trycycler cluster --assemblies {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/*.fasta \
-		--reads {TEMP_RUN_DIR}/{{sample}}.{{barcode}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+		--reads {TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 		--out_dir {TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters --threads {NUM_THREADS_PIPELINE}"""
 		
 	
