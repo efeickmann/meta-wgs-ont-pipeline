@@ -16,6 +16,7 @@ DSBIT_USER="efe2108"
 CWD = os.getcwd()
 TEMP = f"{CWD}/temp"
 TEMP_RUN_DIR=f"{TEMP}/{RUN_DATE}.{FLOW_CELL}"
+ARCHIVE_DIR=f"/media/uhlemannlab/Nano_Data/Nanopore/Metagenomics/{RUN_DATE}_MG/*"
 #ILLUMINA_READS_DIR=f"{TEMP_RUN_DIR}/illumina"
 #DATA_DIR=f"{CWD}/fastq_pass"
 #
@@ -57,7 +58,7 @@ rule all:
 #Loose QC		
 rule qc:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.fastq.gz", sample=samples)
+		expand(f"{ARCHIVE_DIR}/{{sample}}.fastq.gz", sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{barcode}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	shell:
