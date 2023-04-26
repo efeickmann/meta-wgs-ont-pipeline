@@ -97,7 +97,7 @@ circ_tigs=$(mktemp)
 long_tigs=$(mktemp)
 temp_fasta=$(mktemp)
 grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
->$circ_tigs
+> $circ_tigs
 grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
 | head -n 15 > $long_tigs
 cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
@@ -165,7 +165,7 @@ rule try_cluster:
 		sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/contigs.phylip"
-	threads: {NUM_THREADS_PIPELINE}
+	threads: 12
 	shell:
 		f"""trycycler cluster --assemblies {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/*_assembly.fasta \
 --reads {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
