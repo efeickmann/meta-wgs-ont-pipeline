@@ -138,25 +138,25 @@ rm -f $overlaps $unpolished_assembly\n"""
 		f"""$temp_out > {{output}}
 rm -f $temp_out"""
 
-rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
-	input:
-		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
-	output:
-		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta"
-	threads: 4
-	shell:
-		f"""canu -d {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/ -p canu.{{wildcards.sample}} \
-correctedErrorRate=0.06 genomeSize=3.87m -nanopore -fast -corrected \
-stopOnLowCoverage=4 maxThreads=4 minInputCoverage=2 \
-{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz
-{CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu.{{wildcards.sample}}.contigs.fasta \
---list {CWD}/canu_tig_ids.txt --outfile {{output}}"""
+# rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
+# 	input:
+# 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+# 	output:
+# 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta"
+# 	threads: 4
+# 	shell:
+# 		f"""canu -d {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/ -p canu.{{wildcards.sample}} \
+# correctedErrorRate=0.06 genomeSize=3.87m -nanopore -fast -corrected \
+# stopOnLowCoverage=4 maxThreads=4 minInputCoverage=2 \
+# {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz
+# {CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu.{{wildcards.sample}}.contigs.fasta \
+# --list {CWD}/canu_tig_ids.txt --outfile {{output}}"""
 
 #May need to unzip read file for this part
 rule try_cluster:
 	input:
-		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta",
-		sample=samples),
+		# expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta",
+# 		sample=samples),
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta",
 		sample=samples),
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta",
