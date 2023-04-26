@@ -99,16 +99,13 @@ temp_fasta=$(mktemp)
 grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
 >$circ_tigs
 grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
-| head -n 20 > $long_tigs
+| head -n 15 > $long_tigs
 cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
 sort -n {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt \
-| sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt\n"""
-		"awk \'/^>/ {{printf(\"\\n%s__\",$0);next; }} {{ printf(\"%s__\",$0);}}  END {{printf(\"\\n\");}}\' "
-		f"""{TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
-| sort -n > $temp_fasta\n
-LC_ALL=C fgrep -w -f {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt $temp_fasta | """
-		"awk -F\'__\' \'{{for(i=1; i<NF; i+=1) {{print $i}}}}\' "
-		f"""> {{output}} 
+| sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt
+{CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
+--list {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt \
+--outfile {{output}}
 rm -f $circ_tigs $long_tigs $temp_fasta"""
 
 rule raven:
@@ -152,16 +149,8 @@ rule canu: #might need to do some trimming of contig overlaps — script in Tryc
 correctedErrorRate=0.06 genomeSize=3.87m -nanopore -fast -corrected \
 stopOnLowCoverage=4 maxThreads=4 \
 {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz
-temp_fasta_canu=$(mktemp)
-mv {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu.{{wildcards.sample}}.contigs.fasta \
-{TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu_assembly_unsorted.fasta\n"""
-		"awk \'/^>/ {{printf(\"\\n%s__\",$0);next; }} {{ printf(\"%s__\",$0);}}  END {{printf(\"\\n\");}}\' "
-		f"""{TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu_assembly_unsorted.fasta \
-| sort -n > $temp_fasta_canu
-LC_ALL=C fgrep -w -f canu_tig_ids.txt $temp_fasta_canu | """
-		"awk -F\'__\' \'{{for(i=1; i<NF; i+=1) {{print $i}}}}\' "
-		f"""> {{output}}
-rm -f $temp_fasta_canu"""	
+{CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu.{{wildcards.sample}}.contigs.fasta \
+--list {CWD}/canu_tig_ids.txt --outfile {{output}}"""
 
 #May need to unzip read file for this part
 rule try_cluster:
