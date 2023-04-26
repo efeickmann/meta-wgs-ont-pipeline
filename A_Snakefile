@@ -165,6 +165,7 @@ rule try_cluster:
 		sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/contigs.phylip"
+	threads: {NUM_THREADS_PIPELINE}
 	shell:
 		f"""trycycler cluster --assemblies {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/*_assembly.fasta \
 --reads {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
