@@ -147,7 +147,7 @@ rule canu: #might need to do some trimming of contig overlaps — script in Tryc
 	shell:
 		f"""canu -d {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/ -p canu.{{wildcards.sample}} \
 correctedErrorRate=0.06 genomeSize=3.87m -nanopore -fast -corrected \
-stopOnLowCoverage=4 maxThreads=4 \
+stopOnLowCoverage=4 maxThreads=4 minInputCoverage=2\
 {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz
 {CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/canu.{{wildcards.sample}}.contigs.fasta \
 --list {CWD}/canu_tig_ids.txt --outfile {{output}}"""
