@@ -171,7 +171,7 @@ rule try_cluster:
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta",
 		sample=samples),
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta",
-		sample=samples)
+		sample=samples),
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta",
 		sample=samples)
 	output:
