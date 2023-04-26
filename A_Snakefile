@@ -26,7 +26,7 @@ ARCHIVE_DIR=f"""/media/uhlemannlab/Nano_Data/Nanopore/Metagenomics/\
 #ILLUMINA_READS_DIR=f"{TEMP_RUN_DIR}/illumina"
 #DATA_DIR=f"{CWD}/fastq_pass"
 #
-BARCODE_FILE=f"{ARCHIVE_DIR}/fastq_pass/samples_barcodes"
+BARCODE_FILE=f"{CWD}/selected_samples.csv"
 
 samples_df = pd.read_csv(BARCODE_FILE, sep='\t', header=None)
 samples_df.columns=['sample', 'barcode']
@@ -83,64 +83,64 @@ rule qc:
 {{wildcards.sample}}.fastq.gz | gzip > {{output}}"""
 
 #Multiple assemblies so Trycycler has something to work with	
-# rule flye:
-# 	input:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
-# 	output:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta"
-# 	threads: 4
-# 	shell:
-# 		f"""flye --nano-hq {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
-# -o {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies \
-# --threads 4 --meta --debug --read-error 0.03
-# circ_tigs=$(mktemp)
-# long_tigs=$(mktemp)
-# temp_fasta=$(mktemp)
-# grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
-# >$circ_tigs
-# grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
-# | head -n 20 > $long_tigs
-# cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
-# sort -n {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt \
-# | sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt\n"""
-# 		"awk \'/^>/ {{printf(\"\\n%s__\",$0);next; }} {{ printf(\"%s__\",$0);}}  END {{printf(\"\\n\");}}\' "
-# 		f"""{TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
-# | sort -n > $temp_fasta\n
-# LC_ALL=C fgrep -w -f {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt $temp_fasta | """
-# 		"awk -F\'__\' \'{{for(i=1; i<NF; i+=1) {{print $i}}}}\' "
-# 		f"""> {{output}} 
-# rm -f $circ_tigs $long_tigs $temp_fasta"""
+rule flye:
+	input:
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+	output:
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta"
+	threads: 4
+	shell:
+		f"""flye --nano-hq {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+-o {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies \
+--threads 4 --meta --debug --read-error 0.03
+circ_tigs=$(mktemp)
+long_tigs=$(mktemp)
+temp_fasta=$(mktemp)
+grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
+>$circ_tigs
+grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
+| head -n 20 > $long_tigs
+cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
+sort -n {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt \
+| sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt\n"""
+		"awk \'/^>/ {{printf(\"\\n%s__\",$0);next; }} {{ printf(\"%s__\",$0);}}  END {{printf(\"\\n\");}}\' "
+		f"""{TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
+| sort -n > $temp_fasta\n
+LC_ALL=C fgrep -w -f {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt $temp_fasta | """
+		"awk -F\'__\' \'{{for(i=1; i<NF; i+=1) {{print $i}}}}\' "
+		f"""> {{output}} 
+rm -f $circ_tigs $long_tigs $temp_fasta"""
 
-# rule raven:
-# 	input:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
-# 	output:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta"
-# 	shell:
-# 		f"""raven -t {NUM_THREADS_PIPELINE} {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
-#  > {{output}}"""
-# 
-# rule miniasm:
-# 	input:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
-# 	output:
-# 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta"
-# 	shell:
-# 		"overlaps=$(mktemp).paf\n"
-# 		"unpolished_assembly=$(mktemp).gfa\n"
-# 		"temp_out=$(mktemp).gfa\n"
-# 		
-# 		f"""minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} \
-# {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
-# {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > $overlaps
-# miniasm -f {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz $overlaps > $unpolished_assembly
-# minipolish --threads {NUM_THREADS_PIPELINE} \
-# {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz $unpolished_assembly > $temp_out
-# rm -f $overlaps $unpolished_assembly\n"""
-# 		"awk \'/^S/{{print \">\"$2\"\\n\"$3}}\' "
-# 		f"""$temp_out > {{output}}
-# rm -f $temp_out"""
-# 
+rule raven:
+	input:
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+	output:
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta"
+	shell:
+		f"""raven -t {NUM_THREADS_PIPELINE} {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz\
+ > {{output}}"""
+
+rule miniasm:
+	input:
+		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+	output:
+		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta"
+	shell:
+		"overlaps=$(mktemp).paf\n"
+		"unpolished_assembly=$(mktemp).gfa\n"
+		"temp_out=$(mktemp).gfa\n"
+		
+		f"""minimap2 -x ava-ont -t {NUM_THREADS_PIPELINE} \
+{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > $overlaps
+miniasm -f {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz $overlaps > $unpolished_assembly
+minipolish --threads {NUM_THREADS_PIPELINE} \
+{TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz $unpolished_assembly > $temp_out
+rm -f $overlaps $unpolished_assembly\n"""
+		"awk \'/^S/{{print \">\"$2\"\\n\"$3}}\' "
+		f"""$temp_out > {{output}}
+rm -f $temp_out"""
+
 rule canu: #might need to do some trimming of contig overlaps — script in Trycycler repo
 	input:
 		f"{TEMP_RUN_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
@@ -168,12 +168,12 @@ rule try_cluster:
 	input:
 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/canu_assembly.fasta",
 		sample=samples),
-# 		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta",
-# 		sample=samples),
-		# expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta",
-# 		sample=samples)
-	# 	expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta",
-# 		sample=samples)
+		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/mini_assembly.fasta",
+		sample=samples),
+		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/flye_assembly.fasta",
+		sample=samples)
+		expand(f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.assemblies/raven_assembly.fasta",
+		sample=samples)
 	output:
 		f"{TEMP_RUN_DIR}/{{sample}}.{RUN_DATE}.clusters/contigs.phylip"
 	shell:
