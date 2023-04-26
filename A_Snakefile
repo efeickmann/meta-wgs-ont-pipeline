@@ -93,20 +93,21 @@ rule flye:
 		f"""flye --nano-hq {TEMP_RUN_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -o {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies \
 --threads 4 --meta --debug --read-error 0.03
-circ_tigs=$(mktemp)
-long_tigs=$(mktemp)
-temp_fasta=$(mktemp)
-grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
-> $circ_tigs
-grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
-| head -n 15 > $long_tigs
-cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
-sort -n {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt \
-| sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt
-{CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
---list {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt \
---outfile {{output}}
-rm -f $circ_tigs $long_tigs $temp_fasta"""
+touch {{output}}"""
+# circ_tigs=$(mktemp)
+# long_tigs=$(mktemp)
+# temp_fasta=$(mktemp)
+# grep \"Y\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
+# > $circ_tigs
+# grep \"contig\" {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly_info.txt \
+# | head -n 15 > $long_tigs
+# cat $circ_tigs $long_tigs | cut -f1 > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt
+# sort -n {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs.txt \
+# | sort -u > {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt
+# {CWD}/faSomeRecords.py --fasta {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/assembly.fasta \
+# --list {TEMP_RUN_DIR}/{{wildcards.sample}}.{RUN_DATE}.assemblies/flye_tigs_sorted.txt \
+# --outfile {{output}}
+# rm -f $circ_tigs $long_tigs $temp_fasta"""
 
 rule raven:
 	input:
