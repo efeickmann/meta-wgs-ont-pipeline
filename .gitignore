@@ -5,4 +5,6 @@ data/
 temp/
 tools/
 .DS_Store
+.gitignore.swp
+.snakemake/
 *.txt
