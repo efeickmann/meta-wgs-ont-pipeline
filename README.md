@@ -20,7 +20,7 @@ conda create -n meta_pipe_env --file meta_pipe.yml
 3. Open ```snakefile``` in your favorite text editor and edit the following parameters:
 - RUN_DATE: The date your ONT data was produced, in the form YYYYMMDD. Used to ID the sequencing run.
 - FLOW_CELL: The ID of the flowcell used for the run.
-- ONT_MODEL: The chemistry, flowcell type, and basecaller used to generate your data. Should be given in the form ```r1041_min_high_g303``` for data produced with R10.4.1 chemistry, on a MINion flowcell, using Guppy v3.0.3 set to high accuracy bascalling.
+- ONT_MODEL: The chemistry, flowcell type, and basecaller used to generate your data. Should be given in the form ```r1041_min_high_g303``` for data produced with R10.4.1 chemistry on a MINion flowcell and basecalled with Guppy v3.0.3 set to high accuracy basecalling.
 - ARCHIVE_DIR: The directory containing the basecalled fastq files from your run.
 - BARCODE_FILE: A .tsv file with a list of the samples you'd like to process, along with their barcodes. Of the form
 ```
