@@ -1,0 +1,8 @@
+*.newick
+*.csv
+*.html
+data/
+temp/
+tools/
+.DS_Store
+*.txt
