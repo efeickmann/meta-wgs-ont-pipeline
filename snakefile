@@ -157,6 +157,8 @@ rule cat_polish:
 		"for clstr in $(seq 1 $count):\n"
 		"do\n"
 		f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" 
+		"cluster_${{clstr}}"
+		f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" 
 		"cluster_${{clstr}}/1_contigs\n"
 		"done\n"
 
