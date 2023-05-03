@@ -192,7 +192,7 @@ rule try_consensus:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/4_reads.fastq",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/3_msa.fasta"
 	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/7_final_consensus.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.final_assembly.fasta"
 	threads: 12
 	shell:
 		f"""for clstr in $(seq 1 $count):
