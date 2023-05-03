@@ -62,7 +62,7 @@ rule flye:
 #Racon rules
 rule read_contig_overlap:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	threads: 4
@@ -72,7 +72,7 @@ rule read_contig_overlap:
 
 rule racon:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
@@ -85,7 +85,7 @@ rule racon:
 #ntEdit rules
 rule nthits:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/solidBF_k40.bf"
 	threads: 6
@@ -147,6 +147,7 @@ rule cat_polish:
 	input:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/tig_count.txt"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
@@ -159,6 +160,8 @@ do
 --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.racon.fasta
 	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
 --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.ntedit.fasta
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.medaka.fasta
 	rm -f tmp.txt
 done
 cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
