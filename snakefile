@@ -152,12 +152,16 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		f"""{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
-{{wildcards.sample}} {OUT_DIR}"""
+		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
+for clstr in $(seq 1 $count):
+do
+	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_${{clstr}}/1_contigs
+done
+{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+{OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_
+"""
 
-#count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
-#for clstr in $(seq 1 $count):
-#do
+
 	
 	# echo \"contig_\"$clstr > tmp.txt
 # 	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
