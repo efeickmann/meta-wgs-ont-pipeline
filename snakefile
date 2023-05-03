@@ -6,6 +6,7 @@ import pandas as pd
 
 ### RUN DATA ###
 RUN_DATE="20230413"
+FLOW_CELL=""
 ONT_MODEL=""
 
 ### DIRECTORIES ###
@@ -50,7 +51,7 @@ rule flye:
 	shell:
 		f"""flye --nano-hq {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -o {OUT_DIR}/{{wildcards.sample}}.assemblies \
---threads 4 --meta --debug --read-error 0.03"""
+--threads 4 --meta --read-error 0.03"""
 
 #Maybe remove short contigs using Seqtk?
 #Maybe cut out duplicated sequences in circular contigs?
@@ -104,9 +105,74 @@ rule med_stitch:
 	input:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/contig_consensus.hdf"
 	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.final_assembly.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.medaka.fasta"
 	shell:
 		f"medaka stitch {{input}} {{output}}"
+
+rule count_tigs:
+	input: 
+		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/tig_count.txt"
+	shell:
+		f"""wc -l {OUT_DIR}/{{wildcards.sample}}.assemblies/assembly_info.txt > \
+{OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt"""
+
+rule cat_polish:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/racon.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/tig_count.txt"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
+	shell:
+		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
+for clstr in $(seq 1 $count):
+do
+	echo \"contig_\"$clstr > tmp.txt
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/racon.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/racon.fasta
+	rm -f tmp.txt
+done
+cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
+> {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta"""
+
+rule try_msa:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/3_msa.fasta"
+	threads: 12
+	shell:
+		f"""for clstr in $(seq 1 $count):
+do
+	trycycler msa --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr \
+--threads 12
+done"""
+
+rule try_partition:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/4_reads.fastq"
+	shell:
+		f"""trycycler partition --reads {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+--threads 12 --cluster_dirs {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_*"""
+
+rule try_consensus:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/4_reads.fastq",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/3_msa.fasta"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/7_final_consensus.fasta"
+	threads: 12
+	shell:
+		f"""for clstr in $(seq 1 $count):
+do
+	trycycler consensus --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr\
+--linear --verbose --threads 12
+done
+cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_*/7_final_consensus.fasta \
+> {OUT_DIR}/{{wildcards.sample}}.assemblies/{{wildcards.sample}}.final_assembly.fasta"""
 		
 #FMLRC2 to be implemented only if extra time
 
