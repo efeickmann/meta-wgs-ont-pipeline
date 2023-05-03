@@ -51,45 +51,86 @@ rule flye:
 	shell:
 		f"""flye --nano-hq {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -o {OUT_DIR}/{{wildcards.sample}}.assemblies \
---threads 4 --meta --read-error 0.03"""
+--threads {{threads}} --meta --read-error 0.03"""
 
 #Maybe remove short contigs using Seqtk?
 #Maybe cut out duplicated sequences in circular contigs?
 
 ###Polishing: run several polishers in parallel, obtain consensus from results
-###Apply two rounds of Medaka to consensus (Medaka doesn't rely on reads)
+###Apply Medaka prior to other polishers (Medaka doesn't rely on reads)
 
+#Racon rules
 rule read_contig_overlap:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	threads: 2
 	shell:
-		f"""minimap2 -a -t 2 {{input}} \
+		f"""minimap2 -a -t {{threads}} {{input}} \
 {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > {{output}}"""
 
 rule racon:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/racon.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
 	threads: 2
 	shell:
-		f"""racon -t 2 {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+		f"""racon -t {{threads}} {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/overlap.sam \
-{OUT_DIR}/{{wildcards.sample}}.assemblies/assembly.fasta"""
+{OUT_DIR}/{{wildcards.sample}}.assemblies/assembly.fasta > {{output}}"""
 
+#ntEdit rules
+rule nthits:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/solidBF_k40.bf"
+	threads: 4
+	shell:
+		f"""cd {OUT_DIR}/{{sample}}.assemblies/polish_temp/
+nthits -c 1 --outbloom -p solidBF -b 36 -k 40 -t {{threads}} {{input}}
+cd {CWD}"""
+
+rule ntedit:
+	input:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.nthits.bf"
+	output:
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta"
+	threads: 4
+	shell:
+		f"""cd {OUT_DIR}/{{sample}}.assemblies/polish_temp/
+ntedit -f {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
+-r {{input}} -t {{threads}}
+mv *.fa {{output}}
+cd {CWD}"""
+
+# NextPolish has dependencies which are incompatible with other tools
+# Consequently, it will need to be added later
+# #NextPolish rules
+# rule nextpolish:
+# 	input:
+# 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
+# 	output:
+# 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.nextpol.fasta"
+# 	threads: 4
+# 	shell:
+# 		f"""ls {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > 
+# {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/lgs.fofn
+		
+
+#Medaka rules
 rule mini_align: 
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/racon.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/align_out.bam"
 	threads: 2
 	shell:
 		f"""mini_align -i {OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
--r {{input}} -p {{output}} -t 2"""
+-r {{input}} -p {{output}} -t {{threads}}"""
 
 rule med_consensus:
 	input:
@@ -99,16 +140,17 @@ rule med_consensus:
 	threads: 2 
 	shell:
 		f"""medaka consensus {{input}} {{output}} --model {ONT_MODEL} --batch 200 \
---threads 2"""
+--threads {{threads}}"""
 
 rule med_stitch:
 	input:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/contig_consensus.hdf"
 	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.medaka.fasta"
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
 	shell:
 		f"medaka stitch {{input}} {{output}}"
 
+#Consensus rules
 rule count_tigs:
 	input: 
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
@@ -120,7 +162,8 @@ rule count_tigs:
 
 rule cat_polish:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/racon.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}racon.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/tig_count.txt"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
@@ -129,8 +172,10 @@ rule cat_polish:
 for clstr in $(seq 1 $count):
 do
 	echo \"contig_\"$clstr > tmp.txt
-	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/racon.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/racon.fasta
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{sample}}.racon.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{sample}}.racon.fasta
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{sample}}.ntedit.fasta
 	rm -f tmp.txt
 done
 cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
@@ -146,7 +191,7 @@ rule try_msa:
 		f"""for clstr in $(seq 1 $count):
 do
 	trycycler msa --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr \
---threads 12
+--threads {{threads}}
 done"""
 
 rule try_partition:
@@ -154,9 +199,10 @@ rule try_partition:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/4_reads.fastq"
+	threads: 12
 	shell:
 		f"""trycycler partition --reads {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
---threads 12 --cluster_dirs {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_*"""
+--threads {{threads}} --cluster_dirs {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_*"""
 
 rule try_consensus:
 	input:
@@ -169,13 +215,13 @@ rule try_consensus:
 		f"""for clstr in $(seq 1 $count):
 do
 	trycycler consensus --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr\
---linear --verbose --threads 12
+--linear --verbose --threads {{threads}}
 done
 cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_*/7_final_consensus.fasta \
 > {OUT_DIR}/{{wildcards.sample}}.assemblies/{{wildcards.sample}}.final_assembly.fasta"""
 		
-#FMLRC2 to be implemented only if extra time
-
+#FMLRC2 to be implemented only if extra time — it is written in Rust which is a whole
+#other beast
 # rule bwt:
 # 	input:
 # 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
