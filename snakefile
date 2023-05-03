@@ -156,15 +156,15 @@ rule cat_polish:
 clstr=1
 samp={{wildcards.sample}}
 out={OUT_DIR}
-cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta """
-"""| awk \'{
+cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta """,
+"| awk \'{
         if (substr($0, 1, 1)==\">\") \
 {filename=($out \"/\" $samp \".assemblies/polish_temp/clusters/cluster_\" \
 $clstr \"/1_contigs/\" $samp \".racon.fasta\")}
         print $0 >> filename
         clstr=$clstr + 1
         close(filename)
-}\' """
+}\' "
 
 
 #for clstr in $(seq 1 $count):
