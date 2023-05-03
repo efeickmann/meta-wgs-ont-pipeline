@@ -5,16 +5,16 @@ import os, sys
 import pandas as pd
 
 ### RUN DATA ###
-RUN_DATE="20230413"
-FLOW_CELL=""
-ONT_MODEL=""
+RUN_DATE="20230501"
+FLOW_CELL="..."
+ONT_MODEL="r941_min_sup_g507"
 
 ### DIRECTORIES ###
 CWD = os.getcwd()
-OUT_DIR=f"{CWD}/out/{RUN_DATE}.{FLOW_CELL}"
-ARCHIVE_DIR=f"""/media/uhlemannlab/Nano_Data/Nanopore/Metagenomics/\
-{RUN_DATE}_MG/{CALL_DATE}_{ONT_MODEL}_{FLOW_CELL}_{HEX_ID}"""
-BARCODE_FILE=f"{CWD}/selected_samples.csv"
+OUT_DIR=f"{CWD}/out/SRR17913199"
+#OUT_DIR=f"{CWD}/out/{RUN_DATE}.{FLOW_CELL}"
+ARCHIVE_DIR=f"/media/uhlemannlab/terry/Ethan/meta_pipe/ncbi_data"
+BARCODE_FILE=f"{CWD}/selected_samples.tsv"
 
 samples_df = pd.read_csv(BARCODE_FILE, sep='\t', header=None)
 samples_df.columns=['sample', 'barcode']
@@ -122,33 +122,16 @@ cd {CWD}"""
 		
 
 #Medaka rules
-rule mini_align: 
+rule medaka:
 	input:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/align_out.bam"
-	threads: 2
-	shell:
-		f"""mini_align -i {OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
--r {{input}} -p {{output}} -t {{threads}}"""
-
-rule med_consensus:
-	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/align_out.bam"
-	output:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/contig_consensus.hdf"
-	threads: 2 
-	shell:
-		f"""medaka consensus {{input}} {{output}} --model {ONT_MODEL} --batch 200 \
---threads {{threads}}"""
-
-rule med_stitch:
-	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/contig_consensus.hdf"
-	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
+	threads: 12
 	shell:
-		f"medaka stitch {{input}} {{output}}"
+		f"""medaka_consensus -i {OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+-d {{input}} -o {OUT_DIR}/{{sample}}.assemblies/polish_temp -t {{threads}} -m {ONT_MODEL}
+mv {OUT_DIR}/{{sample}}.assemblies/polish_temp/consensus.fasta {{output}}"""
 
 #Consensus rules
 rule count_tigs:
@@ -162,7 +145,7 @@ rule count_tigs:
 
 rule cat_polish:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}racon.fasta",
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta",
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/tig_count.txt"
 	output:
