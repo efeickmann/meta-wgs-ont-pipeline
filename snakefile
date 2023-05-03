@@ -152,26 +152,27 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
+		"echo \"here\""
 		f"count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)\n"
-"echo \"here\""
-"for clstr in $(seq 1 $count):\n"
-"do\n"
-f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${clstr}/1_contigs\n"
-"done\n"
+		"for clstr in $(seq 1 $count):\n"
+		"do\n"
+		f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" 
+		"cluster_${clstr}/1_contigs\n"
+		"done\n"
 
-f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+		f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\n"
 
-f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
+		f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\n"
 
-f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
+		f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\n"
 
-"for clstr in $(seq 1 $count):\n"
-"do"
-f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${clstr}"
-f"""/1_contigs/* > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta
+		"for clstr in $(seq 1 $count):\n"
+		"do"
+		f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${clstr}"
+		f"""/1_contigs/* > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta
 done"""
 
 
