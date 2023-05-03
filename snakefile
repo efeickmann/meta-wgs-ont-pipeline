@@ -164,7 +164,7 @@ $clstr \"/1_contigs/\" $samp \".racon.fasta\")}
         print $0 >> filename
         clstr=$clstr + 1
         close(filename)
-}\' "
+}\' ""
 
 
 #for clstr in $(seq 1 $count):
