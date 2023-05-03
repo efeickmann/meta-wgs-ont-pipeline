@@ -157,7 +157,7 @@ rule cat_polish:
 		"for clstr in $(seq 1 $count):\n"
 		"do\n"
 		f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" 
-		"cluster_${clstr}/1_contigs\n"
+		"cluster_${{clstr}}/1_contigs\n"
 		"done\n"
 
 		f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
@@ -171,7 +171,7 @@ rule cat_polish:
 
 		"for clstr in $(seq 1 $count):\n"
 		"do"
-		f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${clstr}"
+		f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${{clstr}}"
 		f"""/1_contigs/* > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta
 done"""
 
