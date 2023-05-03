@@ -152,21 +152,10 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
-clstr=1
-samp={{wildcards.sample}}
-out={OUT_DIR}
-cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta """,
-"""| awk \'{
-        if (substr($0, 1, 1)==\">\") \
-{filename=($out \"/\" $samp \".assemblies/polish_temp/clusters/cluster_\" \
-$clstr \"/1_contigs/\" $samp \".racon.fasta\")}
-        print $0 >> filename
-        clstr=$clstr + 1
-        close(filename)
-}\' """
+		f"""{CWD}/cluster.sh {OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta \
+{{wildcards.sample}} {OUT_DIR}"""
 
-
+#count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
 #for clstr in $(seq 1 $count):
 #do
 	
