@@ -47,7 +47,7 @@ rule flye:
 		f"{OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
-	threads: 4
+	threads: 6
 	shell:
 		f"""flye --nano-hq {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -o {OUT_DIR}/{{wildcards.sample}}.assemblies \
@@ -65,7 +65,7 @@ rule read_contig_overlap:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
-	threads: 2
+	threads: 4
 	shell:
 		f"""minimap2 -a -t {{threads}} {{input}} \
 {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > {{output}}"""
@@ -76,7 +76,7 @@ rule racon:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
-	threads: 2
+	threads: 6
 	shell:
 		f"""racon -t {{threads}} {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/overlap.sam \
@@ -88,9 +88,9 @@ rule nthits:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/solidBF_k40.bf"
-	threads: 4
+	threads: 6
 	shell:
-		f"""cd {OUT_DIR}/{{sample}}.assemblies/polish_temp/
+		f"""cd {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/
 nthits -c 1 --outbloom -p solidBF -b 36 -k 40 -t {{threads}} {{input}}
 cd {CWD}"""
 
@@ -99,9 +99,9 @@ rule ntedit:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/solidBF_k40.bf"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta"
-	threads: 4
+	threads: 6
 	shell:
-		f"""cd {OUT_DIR}/{{sample}}.assemblies/polish_temp/
+		f"""cd {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/
 ntedit -f {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
 -r {{input}} -t {{threads}}
 mv *.fa {{output}}
@@ -129,9 +129,9 @@ rule medaka:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.medaka.fasta"
 	threads: 12
 	shell:
-		f"""medaka_consensus -i {OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
--d {{input}} -o {OUT_DIR}/{{sample}}.assemblies/polish_temp -t {{threads}} -m {ONT_MODEL}
-mv {OUT_DIR}/{{sample}}.assemblies/polish_temp/consensus.fasta {{output}}"""
+		f"""medaka_consensus -i {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
+-d {{input}} -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp -t {{threads}} -m {ONT_MODEL}
+mv {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/consensus.fasta {{output}}"""
 
 #Consensus rules
 rule count_tigs:
@@ -155,10 +155,10 @@ rule cat_polish:
 for clstr in $(seq 1 $count):
 do
 	echo \"contig_\"$clstr > tmp.txt
-	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{sample}}.racon.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{sample}}.racon.fasta
-	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{sample}}.ntedit.fasta
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.racon.fasta
+	python CWD/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
+--list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.ntedit.fasta
 	rm -f tmp.txt
 done
 cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
