@@ -152,7 +152,7 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		f"""{CWD}/cluster.sh {OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta \
+		f"""{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
 {{wildcards.sample}} {OUT_DIR}"""
 
 #count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
