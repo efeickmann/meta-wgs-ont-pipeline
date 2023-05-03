@@ -155,15 +155,16 @@ rule cat_polish:
 		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
 clstr=1
 samp={{wildcards.sample}}
-cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
-| awk \'{{
+out={OUT_DIR}
+cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta"""
+"| awk \'{
         if (substr($0, 1, 1)==\">\") \
-{{filename=(\"{OUT_DIR}/\" $samp \".assemblies/polish_temp/clusters/cluster_\" \
-$clstr \"/1_contigs/\" $samp \".racon.fasta\")}}
+{filename=($out \"/\" $samp \".assemblies/polish_temp/clusters/cluster_\" \
+$clstr \"/1_contigs/\" $samp \".racon.fasta\")}
         print $0 >> filename
         clstr=$clstr + 1
         close(filename)
-}}\'
+}\'"
 
 
 #for clstr in $(seq 1 $count):
@@ -178,8 +179,8 @@ $clstr \"/1_contigs/\" $samp \".racon.fasta\")}}
 # --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.medaka.fasta
 # 	rm -f tmp.txt
 #done
-cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
-> {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta"""
+# cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
+# > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta"""
 
 rule try_msa:
 	input:
