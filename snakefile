@@ -152,7 +152,7 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		"echo \"here\""
+		"echo \"here\"\n"
 		f"count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)\n"
 		"for clstr in $(seq 1 $count):\n"
 		"do\n"
@@ -170,7 +170,7 @@ rule cat_polish:
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\n"
 
 		"for clstr in $(seq 1 $count):\n"
-		"do"
+		"do\n"
 		f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${{clstr}}"
 		f"""/1_contigs/* > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta
 done"""
