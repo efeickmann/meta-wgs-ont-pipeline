@@ -154,10 +154,12 @@ rule cat_polish:
 	shell:
 		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
 clstr=1
-cat {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+samp={{wildcards.sample}}
+cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
 | awk \'{{
         if (substr($0, 1, 1)==\">\") \
-{{filename=(\"{OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\"$clstr\"/1_contigs/{{wildcards.sample}}.racon.fasta\")}}
+{{filename=(\"{OUT_DIR}/\" $samp \".assemblies/polish_temp/clusters/cluster_\" \
+$clstr \"/1_contigs/\" $samp \".racon.fasta\")}}
         print $0 >> filename
         clstr=$clstr + 1
         close(filename)
