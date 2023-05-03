@@ -96,7 +96,7 @@ cd {CWD}"""
 
 rule ntedit:
 	input:
-		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.nthits.bf"
+		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/solidBF_k40.bf"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.ntedit.fasta"
 	threads: 4
