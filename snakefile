@@ -152,13 +152,12 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
-for clstr in $(seq 1 $count):
-do
-	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/""" "cluster_${{clstr}}/1_contigs"
-"""
-done
-{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+		f"count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)\n"
+"for clstr in $(seq 1 $count):\n"
+"do\n"
+f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${{clstr}}/1_contigs\n"
+"done\n"
+f"""{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_"""
 
 
