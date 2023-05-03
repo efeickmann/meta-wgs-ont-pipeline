@@ -102,7 +102,7 @@ rule ntedit:
 	threads: 6
 	shell:
 		f"""cd {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/
-ntedit -f {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
+ntedit -f {OUT_DIR}/{{wildcards.sample}}.assemblies/assembly.fasta \
 -r {{input}} -t {{threads}}
 mv *.fa {{output}}
 cd {CWD}"""
