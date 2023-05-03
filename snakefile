@@ -152,9 +152,8 @@ rule cat_polish:
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
-		"echo \"here\"\n"
 		f"count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)\n"
-		"for clstr in $(seq 1 $count):\n"
+		"for clstr in $(seq 1 $count)\n"
 		"do\n"
 		f"	mkdir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" 
 		"cluster_${{clstr}}\n"
@@ -171,7 +170,7 @@ rule cat_polish:
 		f"{CWD}/cluster.sh {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
 \'{OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\'\n"
 
-		"for clstr in $(seq 1 $count):\n"
+		"for clstr in $(seq 1 $count)\n"
 		"do\n"
 		f"	cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/" "cluster_${{clstr}}"
 		f"""/1_contigs/* > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta
@@ -198,7 +197,7 @@ rule try_msa:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/3_msa.fasta"
 	threads: 12
 	shell:
-		f"""for clstr in $(seq 1 $count):
+		f"""for clstr in $(seq 1 $count)
 do
 	trycycler msa --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr \
 --threads {{threads}}
@@ -222,7 +221,7 @@ rule try_consensus:
 		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.final_assembly.fasta"
 	threads: 12
 	shell:
-		f"""for clstr in $(seq 1 $count):
+		f"""for clstr in $(seq 1 $count)
 do
 	trycycler consensus --cluster_dir {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr\
 --linear --verbose --threads {{threads}}
