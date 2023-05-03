@@ -104,7 +104,7 @@ rule ntedit:
 		f"""cd {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/
 ntedit -f {OUT_DIR}/{{wildcards.sample}}.assemblies/assembly.fasta \
 -r {{input}} -t {{threads}}
-mv *.fa {{output}}
+mv assembly.fasta_k40_z100_rsolidBF_k40.bf_i4_d5_m0_edited.fa {{output}}
 cd {CWD}"""
 
 # NextPolish has dependencies which are incompatible with other tools
