@@ -153,17 +153,29 @@ rule cat_polish:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/clusters/cluster_1/2_all_seqs.fasta"
 	shell:
 		f"""count=$(cut -d \" \" -f1 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/tig_count.txt)
-for clstr in $(seq 1 $count):
-do
-	echo \"contig_\"$clstr > tmp.txt
-	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.racon.fasta
-	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.ntedit.fasta
-	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
---list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.medaka.fasta
-	rm -f tmp.txt
-done
+clstr=1
+cat {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+| awk \'{{
+        if (substr($0, 1, 1)==\">\") \
+{{filename=(\"{OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_\"$clstr\"/1_contigs/{{wildcards.sample}}.racon.fasta\")}}
+        print $0 >> filename
+        clstr=$clstr + 1
+        close(filename)
+}}\'
+
+
+#for clstr in $(seq 1 $count):
+#do
+	
+	# echo \"contig_\"$clstr > tmp.txt
+# 	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.racon.fasta \
+# --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.racon.fasta
+# 	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.ntedit.fasta \
+# --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.ntedit.fasta
+# 	python {CWD}/faSomeRecords.py --fasta {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/{{wildcards.sample}}.medaka.fasta \
+# --list tmp.txt -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$clstr/1_contigs/{{wildcards.sample}}.medaka.fasta
+# 	rm -f tmp.txt
+#done
 cat {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/1_contigs/* \
 > {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/clusters/cluster_$count/2_all_seqs.fasta"""
 
