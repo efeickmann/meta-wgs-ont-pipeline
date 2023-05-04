@@ -1,9 +1,0 @@
-[submodule "bcftools"]
-	path = bcftools
-	url = https://github.com/samtools/bcftools.git
-[submodule "htslib"]
-	path = htslib
-	url = https://github.com/samtools/htslib.git
-[submodule "htscodecs"]
-	path = htscodecs
-	url = https://github.com/samtools/htscodecs.git
