@@ -1,4 +1,4 @@
-# meta-wgs-ont-pipeline
+#meta-wgs-ont-pipeline
 Pipeline for processing and assembling metagenomic WGS ONT data
 
 ##System requirements
