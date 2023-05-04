@@ -4,6 +4,7 @@ Pipeline for processing and assembling metagenomic WGS ONT data
 ## File descriptions
 - snakefile: Main pipeline file. Contains directions for assembly.
 - meta_config.yml: Configuration file with instructions to create the necessary Conda environment.
+- Data for example run (200k reads subsampled from the ONT Kit 14 run produced in this paper:  https://microbiomejournal.biomedcentral.com/articles/10.1186/s40168-022-01415-8#availability-of-data-and-materials) can be found at https://www.dropbox.com/s/9hjez322jcd6na2/SRR17913199.fastq.gz?dl=0
 
 ## Usage
 1. Make a local clone of the repo:
