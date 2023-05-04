@@ -13,9 +13,9 @@ git clone https://github.com/efeickmann/meta-wgs-ont-pipeline.git \
 && cd meta-wgs-ont-pipeline
 ```
 
-2. Use the provided config file (```meta_pipe.yml```) to create a Conda environment (Recommend using Mamba. Instructions for installation at https://mamba.readthedocs.io/en/latest/):
+2. Use the provided config file (```meta_config.yml```) to create a Conda environment (Recommend using Mamba. Instructions for installation at https://mamba.readthedocs.io/en/latest/):
 ```
-mamba create -n meta_pipe_env --file meta_pipe.yml
+mamba create -n meta_pipe_env --file meta_config.yml
 ```
 Activate the environment with ```mamba activate meta_pipe_env```
 
