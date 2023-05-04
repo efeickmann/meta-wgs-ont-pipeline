@@ -1,9 +1,17 @@
 # meta-wgs-ont-pipeline
 Pipeline for processing and assembling metagenomic WGS ONT data
 
+##System requirements
+- Up-to-date Conda installation, recommend Mamba installation
+- Packages described below
+- 16 CPUs
+- 128GB RAM
+(May work on systems with fewer CPUs and less RAM but untested and likely slow)
+
 ## File descriptions
 - snakefile: Main pipeline file. Contains directions for assembly.
-- meta_config.yml: Configuration file with instructions to create the necessary Conda environment.
+- dag.png: PNG containing directed acyclic graph representation of pipeline.
+- selected_samples.tsv: Premade .tsv for running SRR17913199 example
 - Data for example run (200k reads subsampled from the ONT Kit 14 run produced in this paper:  https://microbiomejournal.biomedcentral.com/articles/10.1186/s40168-022-01415-8#availability-of-data-and-materials) can be found at https://www.dropbox.com/s/9hjez322jcd6na2/SRR17913199.fastq.gz?dl=0
 
 ## Usage
@@ -13,10 +21,10 @@ git clone https://github.com/efeickmann/meta-wgs-ont-pipeline.git \
 && cd meta-wgs-ont-pipeline
 ```
 
-2. Use the provided config file (```meta_config.yml```) to create a Conda environment (Recommend using Mamba. Instructions for installation at https://mamba.readthedocs.io/en/latest/):
-```
-mamba create -n meta_pipe_env --file meta_config.yml
-```
+2. Create a Conda environment with the following packages: snakemake, filtlong, flye, racon, medaka (this could take a while!). If Medaka fails during the pipeline due to a package called 'bcftools', try recreating the environment by specifying the following packages: snakemake, filtlong, flye, racon, medaka, bcftools=1.15 (Recommend using Mamba. Instructions for installation at https://mamba.readthedocs.io/en/latest/). 
+
+If this takes too long or doesn't work, you can try creating a Conda environment for each tool. First, make an environment for snakemake and ensure that it is active when you start the pipeline. Next, open snakefile in a text editor and uncomment the "conda" parameters for each rule. Finally, create Conda environments for each tool, named as specified in the snakefile. If Conda/Mamba don't work at all, you could try using pip. 
+
 Activate the environment with ```mamba activate meta_pipe_env```
 
 3. Open ```snakefile``` in your favorite text editor and edit the following parameters:
