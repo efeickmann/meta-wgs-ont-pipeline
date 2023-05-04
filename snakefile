@@ -13,7 +13,7 @@ ONT_MODEL="r941_min_sup_g507"
 CWD = os.getcwd()
 OUT_DIR=f"{CWD}/SRR17913199"
 #OUT_DIR=f"{CWD}/out/{RUN_DATE}.{FLOW_CELL}"
-ARCHIVE_DIR=f"/media/uhlemannlab/terry/Ethan/meta_pipe/ncbi_data"
+ARCHIVE_DIR=f"{CWD}/reads"
 BARCODE_FILE=f"{CWD}/selected_samples.tsv"
 
 samples_df = pd.read_csv(BARCODE_FILE, sep='\t', header=None)
@@ -47,14 +47,11 @@ rule flye:
 		f"{OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
-	threads: 6
+	threads: 14
 	shell:
 		f"""flye --nano-hq {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -o {OUT_DIR}/{{wildcards.sample}}.assemblies \
 --threads {{threads}} --meta --read-error 0.03"""
-
-#Maybe remove short contigs using Seqtk?
-#Maybe cut out duplicated sequences in circular contigs?
 
 ###Polishing: pass results from Racon to Medaka
 
@@ -64,7 +61,7 @@ rule read_contig_overlap:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
-	threads: 4
+	threads: 14
 	shell:
 		f"""minimap2 -a -t {{threads}} {{input}} \
 {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz > {{output}}"""
@@ -75,7 +72,7 @@ rule racon:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
-	threads: 12
+	threads: 14
 	shell:
 		f"""racon -t {{threads}} {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp/overlap.sam \
@@ -87,7 +84,7 @@ rule medaka:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.final_assembly.fasta"
-	threads: 12
+	threads: 14
 	shell:
 		f"""medaka_consensus -i {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
 -d {{input}} -o {OUT_DIR}/{{wildcards.sample}}.assemblies/polish_temp -t {{threads}} -m {ONT_MODEL}
