@@ -1,7 +1,7 @@
-#meta-wgs-ont-pipeline
+# meta-wgs-ont-pipeline
 Pipeline for processing and assembling metagenomic WGS ONT data
 
-##System requirements
+## System requirements
 - Up-to-date Conda installation, recommend Mamba installation
 - Packages described below
 - 16 CPUs
