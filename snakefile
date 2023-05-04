@@ -37,6 +37,8 @@ rule qc:
 		expand(f"{ARCHIVE_DIR}/{{sample}}.fastq.gz", sample=samples)
 	output:
 		f"{OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
+	# conda:
+# 		"filtlong_env"
 	shell:
 		f"""filtlong --min_length {MIN_NANO_LEN} --keep_percent 95 {ARCHIVE_DIR}/\
 {{wildcards.sample}}.fastq.gz | gzip > {{output}}"""
@@ -47,6 +49,8 @@ rule flye:
 		f"{OUT_DIR}/{{sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
+	# conda:
+# 		"flye_env"
 	threads: 14
 	shell:
 		f"""flye --nano-hq {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
@@ -61,6 +65,8 @@ rule read_contig_overlap:
 		f"{OUT_DIR}/{{sample}}.assemblies/assembly.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
+	# conda:
+# 		"racon_env"
 	threads: 14
 	shell:
 		f"""minimap2 -a -t {{threads}} {{input}} \
@@ -72,6 +78,8 @@ rule racon:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/overlap.sam"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
+	# conda:
+# 		"racon_env"
 	threads: 14
 	shell:
 		f"""racon -t {{threads}} {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
@@ -84,6 +92,8 @@ rule medaka:
 		f"{OUT_DIR}/{{sample}}.assemblies/polish_temp/{{sample}}.racon.fasta"
 	output:
 		f"{OUT_DIR}/{{sample}}.assemblies/{{sample}}.final_assembly.fasta"
+	# conda:
+# 		"medaka_env"
 	threads: 14
 	shell:
 		f"""medaka_consensus -i {OUT_DIR}/{{wildcards.sample}}.filter_len.{MIN_NANO_LEN}.fastq.gz \
